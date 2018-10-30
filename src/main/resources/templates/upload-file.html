@@ -13,7 +13,10 @@
 <div>
     List of all files: <br/>
     <div th:each="file: ${files}">
-        <a th:href="@{/files/{file}(file=${file})}" th:text="${file}">Filename</a>
+        <img th:src="@{/files/{file}(file=${file})}"/>
+        <br/>
+        <a th:href="@{/files/{file}(file=${file})}"
+           th:text="${file}">Filename</a>
     </div>
 </div>
 </body>

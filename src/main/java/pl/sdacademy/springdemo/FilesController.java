@@ -2,6 +2,7 @@ package pl.sdacademy.springdemo;
 
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -51,9 +53,24 @@ public class FilesController {
 	}
 
 	private ResponseEntity<Resource> responseEntity(String file) {
-		Path path = resolveFilePath(file);
-		return ResponseEntity.ok().body(new PathResource(path));
+		try {
+			Path path = resolveFilePath(file);
+			MediaType contentType = Optional.ofNullable(Files
+				.probeContentType(path)).map
+				(MediaType::valueOf).orElse(MediaType
+				.APPLICATION_OCTET_STREAM);
+			return ResponseEntity.ok().contentType(contentType)
+				.body(new PathResource(path));
+		}
+		catch (IOException e) {
+			throw wrapEx(e);
+		}
 	}
+
+	private RuntimeException wrapEx(Exception e) {
+		return new RuntimeException(e);
+	}
+
 
 	private Collection<String> findAllFiles() {
 		try {
@@ -62,18 +79,19 @@ public class FilesController {
 				.toList());
 		}
 		catch (IOException e) {
-			throw new RuntimeException(e);
+			throw wrapEx(e);
 		}
 	}
 
 	private void saveFile(MultipartFile file) {
 		try {
-			Path path = resolveFilePath(file.getOriginalFilename());
+			Path path = resolveFilePath(file.getOriginalFilename
+				());
 			Files.copy(file.getInputStream(), path,
 				StandardCopyOption.REPLACE_EXISTING);
 		}
 		catch (IOException e) {
-			throw new RuntimeException(e);
+			throw wrapEx(e);
 		}
 	}
 
